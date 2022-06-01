@@ -1,0 +1,188 @@
+openapi: 3.0.2
+info:
+  description: "Wallet interview API"
+  version: "1.0.0"
+  title: "Wallet"
+paths:
+  /wallet:
+    post:
+      tags:
+        - Wallet
+      description: Creates a new wallet with a random identifier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+              required:
+                - name
+      responses:
+        200:
+          description: Newly created wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        400:
+          description: "Invalid Request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wallet/{walletId}:
+    get:
+      tags:
+        - Wallet
+      description: Retrieve an entire existing wallet
+      parameters:
+        - in: path
+          name: walletId
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: Wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        400:
+          description: "Invalid Request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Wallet not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Wallet
+      description: Add an item to a wallet, consistening a a unique type and an amount. Identical calls are idempotent, and changed amount will be saved. Only one type is allowed per wallet
+      parameters:
+        - in: path
+          name: walletId
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: Item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        400:
+          description: "Invalid Request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Wallet not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wallet/{walletId}/type/{type}:
+    get:
+      tags:
+        - Wallet
+      description: Get an item from a wallet.
+      parameters:
+        - in: path
+          name: walletId
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: type
+          schema:
+            type: string
+            enum:
+              - coins
+              - hearts
+              - bombs
+              - erasers
+              - notes
+          required: true
+      responses:
+        200:
+          description: Item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        400:
+          description: "Invalid Request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Wallet not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+
+    Item:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - coins
+            - hearts
+            - bombs
+            - erasers
+            - notes
+        amount:
+          type: number
+          minimum: 1
+          maximum: 1000000
+      required:
+        - type
+        - amount
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          description: 'timestamp of error'
+          type: string
+        status:
+          description: "HTTP status code"
+          type: integer
+        error:
+          description: "description of error"
+          type: string
+        path:
+          description: "request path"
+          type: string
